@@ -1,0 +1,34 @@
+---
+import { INDICATOR_CATALOG } from "../../lib/catalog";
+---
+
+<p class="eyebrow">Paso 3 de 6</p>
+<h2>Seleccionar indicadores</h2>
+<p class="intro">
+  Seleccione todos los indicadores que formarán parte de esta configuración.
+</p>
+
+<div class="indicator-grid">
+  {
+    INDICATOR_CATALOG.map((indicator) => (
+      <label class="option-card">
+        <input
+          type="checkbox"
+          name="selected-indicator"
+          value={indicator.slug}
+        />
+        <span>
+          <strong>{indicator.title}</strong>
+          <small>{indicator.description}</small>
+          <small class="meta">
+            {indicator.dimension} · {indicator.subdimensions.join(", ")}
+          </small>
+        </span>
+      </label>
+    ))
+  }
+</div>
+
+<p class="error" data-indicator-error hidden>
+  Seleccione al menos un indicador.
+</p>
