@@ -11,15 +11,17 @@ export const INITIAL_WIZARD_STATE: WizardState = {
   selectedIndicators: [],
   priorityIndicators: [],
   relationships: {},
+  stratifiersByIndicator: {},
 }
 
 export const WIZARD_STEP_LABELS = [
   '1. Territorio',
   '2. Funciones',
   '3. Indicadores',
-  '4. Prioridades',
-  '5. Relaciones',
-  '6. Revisar',
+  '4. Estratificación',
+  '5. Prioridades',
+  '6. Relaciones',
+  '7. Revisar',
 ]
 
 /**
@@ -43,5 +45,13 @@ export function cleanWizardState(state: WizardState): WizardState {
     )
   }
 
-  return { ...state, priorityIndicators, relationships }
+  const stratifiersByIndicator: WizardState['stratifiersByIndicator'] = {}
+
+  for (const slug of state.selectedIndicators) {
+    if (state.stratifiersByIndicator[slug]) {
+      stratifiersByIndicator[slug] = state.stratifiersByIndicator[slug]
+    }
+  }
+
+  return { ...state, priorityIndicators, relationships, stratifiersByIndicator }
 }

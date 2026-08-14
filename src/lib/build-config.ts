@@ -1,39 +1,14 @@
 import { INDICATOR_CATALOG } from './catalog'
+import { assignStratifierColors, slugify } from './stratifiers'
 import type {
   GeneratedConfig,
   IndicatorDefinition,
+  IndicatorStratifier,
   SchemeField,
   WizardState,
 } from './types'
 
-type StratifierMetadata = Pick<
-  SchemeField,
-  'label' | 'values' | 'aggregate' | 'colors'
->
-
-const STRATIFIER_METADATA: Record<string, StratifierMetadata> = {
-  sexo: {
-    label: 'Sexo',
-    values: ['Hombres', 'Mujeres'],
-    aggregate: 'Total',
-    colors: {
-      Hombres: '#3b82f6',
-      Mujeres: '#ec4899',
-    },
-  },
-  regimen: {
-    label: 'Régimen',
-    values: ['Contributivo', 'Subsidiado', 'Excepción'],
-    aggregate: 'Total',
-    colors: {
-      Contributivo: '#3b82f6',
-      Subsidiado: '#10b981',
-      Excepción: '#8b5cf6',
-    },
-  },
-}
-
-function buildScheme(stratifiers: string[] = []): SchemeField[] {
+function buildScheme(stratifiers: IndicatorStratifier[] = []): SchemeField[] {
   const scheme: SchemeField[] = [
     {
       name: 'territorio',
@@ -49,21 +24,18 @@ function buildScheme(stratifiers: string[] = []): SchemeField[] {
     },
   ]
 
-  stratifiers.forEach((name, offset) => {
-    const metadata = STRATIFIER_METADATA[name] ?? {
-      label: name,
-      values: [],
-      aggregate: 'Total',
-      colors: {},
-    }
+  stratifiers.forEach((stratifier, offset) => {
+    const values = stratifier.values
+      .map((entry) => entry.value.trim())
+      .filter(Boolean)
 
     scheme.push({
-      name,
+      name: slugify(stratifier.label),
       type: 'string',
-      label: metadata.label,
-      values: metadata.values,
-      aggregate: metadata.aggregate,
-      colors: metadata.colors,
+      label: stratifier.label,
+      values,
+      aggregate: 'Total',
+      colors: assignStratifierColors(values),
       index: 4 + offset,
     })
   })
@@ -119,12 +91,15 @@ function materialiseIndicator(
   definition: IndicatorDefinition,
   state: WizardState,
 ) {
+  const stratifiers = state.stratifiersByIndicator[definition.slug] ?? []
+
   return {
     ...definition,
     priority: state.priorityIndicators.includes(definition.slug),
     related_priorities: buildRelatedPriorities(definition.slug, state),
     file: `${definition.slug}.parquet`,
-    scheme: buildScheme(definition.stratifiers ?? []),
+    stratifiers: stratifiers.map((stratifier) => slugify(stratifier.label)),
+    scheme: buildScheme(stratifiers),
   }
 }
 
@@ -248,6 +223,51 @@ export function validateWizardState(state: WizardState): string[] {
       if (prioritySlug === relatedSlug) {
         errors.push(
           `El indicador "${prioritySlug}" no puede estar relacionado consigo mismo.`,
+        )
+      }
+    }
+  }
+
+  for (const [slug, stratifiers] of Object.entries(
+    state.stratifiersByIndicator,
+  )) {
+    if (stratifiers.length === 0) continue
+
+    if (!selected.has(slug)) {
+      errors.push(
+        `El indicador "${slug}" tiene estratificadores pero no está seleccionado.`,
+      )
+      continue
+    }
+
+    const names = new Set<string>()
+
+    for (const stratifier of stratifiers) {
+      const label = stratifier.label.trim()
+
+      if (!label) {
+        errors.push(
+          `El indicador "${slug}" tiene un estratificador sin nombre.`,
+        )
+        continue
+      }
+
+      const name = slugify(label)
+
+      if (names.has(name)) {
+        errors.push(
+          `El indicador "${slug}" tiene estratificadores duplicados: "${label}".`,
+        )
+      }
+      names.add(name)
+
+      const values = new Set(
+        stratifier.values.map((entry) => entry.value.trim()).filter(Boolean),
+      )
+
+      if (values.size < 2) {
+        errors.push(
+          `El estratificador "${label}" del indicador "${slug}" debe tener al menos dos valores.`,
         )
       }
     }

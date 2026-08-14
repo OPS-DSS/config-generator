@@ -11,12 +11,31 @@ export type IndicatorDefinition = {
   category?: string
   dimension: 'dss' | 'policy'
   subdimensions: string[]
-  stratifiers?: string[]
   source: string
   label: string
   axisLabel: string
   color: string
   totalColor?: string
+  bivariate_value?: string
+}
+
+export type StratifierValueEntry = {
+  id: string
+  value: string
+}
+
+/**
+ * A stratifier as configured in the wizard for a single indicator. `label`
+ * is the only thing the user edits; the scheme column name is derived from
+ * it (see `slugify` in lib/stratifiers.ts) rather than stored here, so it
+ * never falls out of sync while the user is still typing the label. Colors
+ * aren't assigned until the config is generated (see `buildScheme` in
+ * lib/build-config.ts), once the final set of values is known.
+ */
+export type IndicatorStratifier = {
+  id: string
+  label: string
+  values: StratifierValueEntry[]
 }
 
 export type WizardState = {
@@ -27,6 +46,7 @@ export type WizardState = {
   selectedIndicators: string[]
   priorityIndicators: string[]
   relationships: Record<string, string[]>
+  stratifiersByIndicator: Record<string, IndicatorStratifier[]>
 }
 
 export type SchemeField = {
@@ -44,6 +64,7 @@ export type GeneratedIndicator = IndicatorDefinition & {
   priority: boolean
   related_priorities: string[]
   file: string
+  stratifiers: string[]
   scheme: SchemeField[]
 }
 

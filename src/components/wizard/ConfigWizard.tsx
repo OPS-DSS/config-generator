@@ -2,11 +2,13 @@ import { useState } from 'react'
 import { Button } from '@/components/ui/button'
 import { Card } from '@/components/ui/card'
 import { cn } from '@/lib/utils'
+import { MIN_STRATIFIER_VALUES } from '@/lib/stratifiers'
 import { INITIAL_WIZARD_STATE, WIZARD_STEP_LABELS } from '@/lib/wizard-state'
-import type { WizardState } from '@/lib/types'
+import type { IndicatorStratifier, WizardState } from '@/lib/types'
 import { TerritoryStep } from './steps/TerritoryStep'
 import { FeaturesStep } from './steps/FeaturesStep'
 import { IndicatorsStep } from './steps/IndicatorsStep'
+import { StratifiersStep } from './steps/StratifiersStep'
 import { PrioritiesStep } from './steps/PrioritiesStep'
 import { RelationshipsStep } from './steps/RelationshipsStep'
 import { ReviewStep } from './steps/ReviewStep'
@@ -18,6 +20,7 @@ export default function ConfigWizard() {
   const [currentStep, setCurrentStep] = useState(0)
   const [territoryError, setTerritoryError] = useState(false)
   const [indicatorError, setIndicatorError] = useState(false)
+  const [stratifierError, setStratifierError] = useState(false)
 
   function validateTerritory(): boolean {
     const valid = Boolean(
@@ -33,12 +36,31 @@ export default function ConfigWizard() {
     return valid
   }
 
+  function validateStratifiers(): boolean {
+    const valid = Object.values(state.stratifiersByIndicator).every(
+      (stratifiers) =>
+        stratifiers.every((stratifier) => {
+          const hasLabel = stratifier.label.trim().length > 0
+          const values = new Set(
+            stratifier.values.map((entry) => entry.value.trim()).filter(Boolean)
+          )
+          return hasLabel && values.size >= MIN_STRATIFIER_VALUES
+        })
+    )
+    setStratifierError(!valid)
+    return valid
+  }
+
   function goToStep(target: number) {
     if (currentStep === 0 && target > currentStep && !validateTerritory()) {
       return
     }
 
     if (currentStep === 2 && target > currentStep && !validateIndicators()) {
+      return
+    }
+
+    if (currentStep === 3 && target > currentStep && !validateStratifiers()) {
       return
     }
 
@@ -65,6 +87,19 @@ export default function ConfigWizard() {
       selectedIndicators: checked
         ? [...prev.selectedIndicators, slug]
         : prev.selectedIndicators.filter((value) => value !== slug),
+    }))
+  }
+
+  function handleStratifiersChange(
+    slug: string,
+    stratifiers: IndicatorStratifier[]
+  ) {
+    setState((prev) => ({
+      ...prev,
+      stratifiersByIndicator: {
+        ...prev.stratifiersByIndicator,
+        [slug]: stratifiers,
+      },
     }))
   }
 
@@ -149,17 +184,25 @@ export default function ConfigWizard() {
           )}
 
           {currentStep === 3 && (
-            <PrioritiesStep state={state} onTogglePriority={handleTogglePriority} />
+            <StratifiersStep
+              state={state}
+              onChange={handleStratifiersChange}
+              showError={stratifierError}
+            />
           )}
 
           {currentStep === 4 && (
+            <PrioritiesStep state={state} onTogglePriority={handleTogglePriority} />
+          )}
+
+          {currentStep === 5 && (
             <RelationshipsStep
               state={state}
               onToggleRelationship={handleToggleRelationship}
             />
           )}
 
-          {currentStep === 5 && <ReviewStep state={state} />}
+          {currentStep === 6 && <ReviewStep state={state} />}
 
           <footer className="mt-4 flex justify-between gap-4 border-t pt-5">
             <Button

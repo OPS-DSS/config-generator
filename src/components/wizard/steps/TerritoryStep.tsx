@@ -13,7 +13,7 @@ export function TerritoryStep({ state, onFieldChange, showError }: TerritoryStep
   return (
     <div className="grid gap-4">
       <p className="text-xs font-extrabold uppercase tracking-wide text-primary">
-        Paso 1 de 6
+        Paso 1 de 7
       </p>
       <h2 className="text-xl font-bold">Territorio</h2>
       <p className="max-w-2xl text-muted-foreground">

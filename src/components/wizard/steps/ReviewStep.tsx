@@ -40,7 +40,7 @@ export function ReviewStep({ state }: ReviewStepProps) {
   return (
     <div className="grid gap-4">
       <p className="text-xs font-extrabold uppercase tracking-wide text-primary">
-        Paso 6 de 6
+        Paso 7 de 7
       </p>
       <h2 className="text-xl font-bold">Revisar y descargar</h2>
       <p className="max-w-2xl text-muted-foreground">

@@ -29,7 +29,7 @@ export function RelationshipsStep({
   return (
     <div className="grid gap-4">
       <p className="text-xs font-extrabold uppercase tracking-wide text-primary">
-        Paso 5 de 6
+        Paso 6 de 7
       </p>
       <h2 className="text-xl font-bold">Relacionar indicadores</h2>
       <p className="max-w-2xl text-muted-foreground">

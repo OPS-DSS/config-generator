@@ -10,7 +10,7 @@ export function FeaturesStep({ state, onToggleFeature }: FeaturesStepProps) {
   return (
     <div className="grid gap-4">
       <p className="text-xs font-extrabold uppercase tracking-wide text-primary">
-        Paso 2 de 6
+        Paso 2 de 7
       </p>
       <h2 className="text-xl font-bold">Funciones del panel</h2>
       <p className="max-w-2xl text-muted-foreground">
